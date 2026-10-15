@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SistemaSuscripciones.Api/SistemaSuscripciones.Api.csproj" />
+    <Project Path="src/SistemaSuscripciones.Application/SistemaSuscripciones.Application.csproj" />
+    <Project Path="src/SistemaSuscripciones.Domain/SistemaSuscripciones.Domain.csproj" />
+    <Project Path="src/SistemaSuscripciones.Infrastructure/SistemaSuscripciones.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SistemaSuscripciones.Tests/SistemaSuscripciones.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,7 @@
+# Configuración local con secretos
+src/SistemaSuscripciones.Api/.env
+src/SistemaSuscripciones.Api/appsettings.Development.json
+
+# Artefactos de compilación de .NET
+bin/
+obj/

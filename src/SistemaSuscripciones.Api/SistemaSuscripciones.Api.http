@@ -1,0 +1,57 @@
+@host = https://localhost:7275
+@facturaId = REEMPLAZAR_CON_ID
+
+### Consultar todas las facturas
+GET {{host}}/api/facturas
+Accept: application/json
+
+###
+
+### Crear una factura
+POST {{host}}/api/facturas
+Content-Type: application/json
+
+{
+  "numeroFactura": "SUS-004",
+  "nombreSocio": "María Pérez",
+  "correoSocio": "maria@example.com",
+  "planSuscripcion": "Plan Premium",
+  "valor": 175000,
+  "fechaVencimiento": "2026-11-15T00:00:00Z",
+  "estado": "PrimerRecordatorio"
+}
+
+###
+
+### Actualizar una factura
+PUT {{host}}/api/facturas/{{facturaId}}
+Content-Type: application/json
+
+{
+  "numeroFactura": "SUS-004-A",
+  "nombreSocio": "María Pérez",
+  "correoSocio": "maria@example.com",
+  "planSuscripcion": "Plan Empresarial",
+  "valor": 220000,
+  "fechaVencimiento": "2026-11-30T00:00:00Z",
+  "estado": "PrimerRecordatorio"
+}
+
+###
+
+### Eliminar una factura
+DELETE {{host}}/api/facturas/{{facturaId}}
+
+###
+
+### Enviar el siguiente recordatorio de una factura
+POST {{host}}/api/facturas/{{facturaId}}/enviar-recordatorio
+Accept: application/json
+
+###
+
+### Procesar todas las facturas con recordatorios activos
+POST {{host}}/api/facturas/procesar-pendientes
+Accept: application/json
+
+###
