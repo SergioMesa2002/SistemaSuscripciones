@@ -83,6 +83,12 @@ app.UseHttpsRedirection();
 
 app.UseCors(AngularCorsPolicy);
 
+if (app.Configuration.GetValue<bool>("ServeAngular"))
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.MapControllers();
 
 app.Run();

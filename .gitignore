@@ -4,6 +4,9 @@ src/SistemaSuscripciones.Api/appsettings.Development.json
 src/SistemaSuscripciones.Api/.smtp-settings.enc
 src/SistemaSuscripciones.Api/.smtp-settings.enc.tmp
 
+# Angular compilado para el modo integrado
+src/SistemaSuscripciones.Api/wwwroot/
+
 # Artefactos de compilación de .NET
 bin/
 obj/

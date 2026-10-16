@@ -53,6 +53,12 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "integrated": {
+              "outputPath": {
+                "base": "../SistemaSuscripciones.Api/wwwroot",
+                "browser": ""
+              }
             }
           },
           "defaultConfiguration": "production"

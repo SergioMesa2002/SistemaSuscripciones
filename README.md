@@ -50,6 +50,31 @@ npm start
 
 La interfaz estará disponible en `http://localhost:4200`. El servidor de desarrollo utiliza `proxy.conf.json` para enviar las solicitudes `/api` a `https://localhost:7275`, por lo que la API debe estar ejecutándose con el perfil HTTPS en otra terminal.
 
+## Modos de ejecución
+
+El proyecto conserva tres formas de iniciarse:
+
+1. Solo la API, disponible en `https://localhost:7275`:
+
+   ```bash
+   dotnet run --project src/SistemaSuscripciones.Api --launch-profile https
+   ```
+
+2. Solo Angular, disponible en `http://localhost:4200` y esperando que la API esté activa:
+
+   ```bash
+   cd src/SistemaSuscripciones.Web
+   npm start
+   ```
+
+3. Aplicación integrada con un único comando y un único servidor:
+
+   ```bash
+   ./ejecutar-integrado.sh
+   ```
+
+El tercer modo compila Angular en `SistemaSuscripciones.Api/wwwroot` y luego inicia ASP.NET Core. La aplicación completa queda disponible en `https://localhost:7275` y Swagger continúa en `https://localhost:7275/swagger`.
+
 Para validar el frontend:
 
 ```bash
