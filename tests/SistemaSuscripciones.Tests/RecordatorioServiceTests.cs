@@ -143,20 +143,20 @@ public sealed class RecordatorioServiceTests
     private static Factura CrearFactura(
         EstadoRecordatorio estado,
         string id = "factura-prueba") => new()
-    {
-        Id = id,
-        NumeroFactura = "SUS-001",
-        Socio = new Socio
         {
-            Id = "socio-prueba",
-            Nombre = "Socio de prueba",
-            Correo = "socio@example.com",
-            PlanSuscripcion = "Premium"
-        },
-        Valor = 150_000m,
-        FechaVencimiento = new DateTime(2026, 11, 30, 0, 0, 0, DateTimeKind.Utc),
-        Estado = estado
-    };
+            Id = id,
+            NumeroFactura = "SUS-001",
+            Socio = new Socio
+            {
+                Id = "socio-prueba",
+                Nombre = "Socio de prueba",
+                Correo = "socio@example.com",
+                PlanSuscripcion = "Premium"
+            },
+            Valor = 150_000m,
+            FechaVencimiento = new DateTime(2026, 11, 30, 0, 0, 0, DateTimeKind.Utc),
+            Estado = estado
+        };
 
     private sealed class FacturaRepositoryFake(params Factura[] facturas) : IFacturaRepository
     {

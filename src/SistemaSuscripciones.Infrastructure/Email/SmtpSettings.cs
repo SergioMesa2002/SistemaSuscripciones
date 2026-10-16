@@ -6,11 +6,6 @@ namespace SistemaSuscripciones.Infrastructure.Email;
 public class SmtpSettings
 {
     /// <summary>
-    /// Identifica la sección de configuración desde la que se enlazan las opciones SMTP.
-    /// </summary>
-    public const string Seccion = "Smtp";
-
-    /// <summary>
     /// Obtiene o establece el nombre o dirección del servidor que entregará los mensajes.
     /// </summary>
     public string Host { get; set; } = string.Empty;
