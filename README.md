@@ -26,3 +26,49 @@ dotnet run --project src/SistemaSuscripciones.Api --launch-profile https
 ```
 
 Swagger estará disponible en `https://localhost:7275/swagger`.
+
+## Interfaz Angular
+
+El frontend se encuentra en `src/SistemaSuscripciones.Web` y utiliza Angular 22. Incluye:
+
+- Resumen de facturas, valores pendientes y recordatorios activos.
+- Búsqueda por factura, socio, correo, plan o estado.
+- Creación, edición y eliminación de facturas.
+- Vista previa y descarga de cada factura como documento PDF.
+- Envío de un recordatorio y procesamiento de todos los pendientes.
+- Validación de formularios, mensajes de error y diseño adaptable a móviles.
+
+Angular 22 requiere Node.js 22.22.3 o una versión compatible posterior. Si utilizas NVM, el archivo `.nvmrc` permite seleccionar la versión recomendada:
+
+```bash
+cd src/SistemaSuscripciones.Web
+nvm install
+nvm use
+npm ci
+npm start
+```
+
+La interfaz estará disponible en `http://localhost:4200`. El servidor de desarrollo utiliza `proxy.conf.json` para enviar las solicitudes `/api` a `https://localhost:7275`, por lo que la API debe estar ejecutándose con el perfil HTTPS en otra terminal.
+
+Para validar el frontend:
+
+```bash
+npm run build
+npm test -- --watch=false
+```
+
+Las acciones de recordatorio requieren una configuración SMTP válida en la API. El CRUD de facturas puede utilizarse con MongoDB sin configurar SMTP.
+
+### Prueba local de SMTP
+
+En el entorno `Development`, la opción **Configuración** de Angular permite guardar el servidor, puerto, usuario, remitente, contraseña de aplicación y uso de SSL/TLS. También permite enviar un correo de prueba sin modificar facturas.
+
+La contraseña:
+
+- Se envía únicamente a la API local.
+- Se cifra mediante ASP.NET Core Data Protection antes de escribirse en `.smtp-settings.enc`.
+- No se devuelve al navegador ni se guarda en MongoDB o Git.
+
+La configuración se recupera automáticamente después de reiniciar la API y no depende de variables SMTP del archivo `.env`. El archivo cifrado está excluido de Git y solo puede descifrarse con las claves locales de Data Protection. Los endpoints de configuración responden únicamente en `Development`; en producción deben usarse secretos del proveedor de despliegue.
+
+La misma pantalla permite personalizar el asunto y el contenido del primer y segundo recordatorio. Las plantillas admiten las variables `{NombreSocio}`, `{CorreoSocio}`, `{PlanSuscripcion}`, `{NumeroFactura}`, `{Valor}` y `{FechaVencimiento}`; la API las reemplaza con los datos de cada factura antes del envío.

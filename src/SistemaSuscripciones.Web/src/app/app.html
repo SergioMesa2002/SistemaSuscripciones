@@ -1,0 +1,803 @@
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Navegación principal">
+    <a class="brand" href="#inicio" aria-label="Ir al inicio" (click)="mostrarFacturas()">
+      <span class="brand__mark" aria-hidden="true">S</span>
+      <span>Suscripto</span>
+    </a>
+    <nav class="navigation">
+      <button
+        class="navigation__item"
+        [class.navigation__item--active]="vista() === 'facturas'"
+        type="button"
+        (click)="mostrarFacturas()"
+      >
+        <span aria-hidden="true">▦</span> Facturas
+      </button>
+      <span class="navigation__item navigation__item--disabled">
+        <span aria-hidden="true">◌</span> Recordatorios
+      </span>
+      <button
+        class="navigation__item"
+        [class.navigation__item--active]="vista() === 'configuracion'"
+        type="button"
+        (click)="mostrarConfiguracion()"
+      >
+        <span aria-hidden="true">⌁</span> Configuración
+      </button>
+    </nav>
+    <div class="sidebar__footer">
+      <span class="status-dot" aria-hidden="true"></span>
+      <div><strong>API conectada</strong><small>Entorno local</small></div>
+    </div>
+  </aside>
+
+  <main id="inicio" class="main-content">
+    @if (vista() === 'facturas') {
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Panel administrativo</p>
+          <h1>Gestión de facturas</h1>
+          <p class="subtitle">Administra cobros y mantén al día los recordatorios.</p>
+        </div>
+        <button class="button button--primary" type="button" (click)="abrirCreacion()">
+          <span aria-hidden="true">＋</span> Nueva factura
+        </button>
+      </header>
+
+      <section class="metrics" aria-label="Resumen de facturación">
+        <article class="metric-card metric-card--featured">
+          <span class="metric-card__icon" aria-hidden="true">$</span>
+          <div>
+            <p>Valor pendiente</p>
+            <strong>{{ formatearMoneda(valorPendiente()) }}</strong>
+            <small>Acumulado en facturas</small>
+          </div>
+        </article>
+        <article class="metric-card">
+          <span class="metric-card__icon" aria-hidden="true">#</span>
+          <div>
+            <p>Total facturas</p>
+            <strong>{{ totalFacturas() }}</strong
+            ><small>Registradas</small>
+          </div>
+        </article>
+        <article class="metric-card">
+          <span class="metric-card__icon metric-card__icon--green" aria-hidden="true">↗</span>
+          <div>
+            <p>Recordatorios activos</p>
+            <strong>{{ facturasActivas() }}</strong>
+            <small>Listos para procesar</small>
+          </div>
+        </article>
+        <article class="metric-card">
+          <span class="metric-card__icon metric-card__icon--orange" aria-hidden="true">!</span>
+          <div>
+            <p>Facturas vencidas</p>
+            <strong>{{ facturasVencidas() }}</strong>
+            <small>Requieren seguimiento</small>
+          </div>
+        </article>
+      </section>
+
+      <section id="facturas" class="panel">
+        <div class="panel__header">
+          <div>
+            <h2>Facturas recientes</h2>
+            <p>Consulta y gestiona las obligaciones de tus socios.</p>
+          </div>
+          <button
+            class="button button--secondary"
+            type="button"
+            [disabled]="procesandoPendientes() || facturasActivas() === 0"
+            (click)="procesarTodos()"
+          >
+            @if (procesandoPendientes()) {
+              <span class="spinner spinner--dark" aria-hidden="true"></span> Procesando...
+            } @else {
+              <span aria-hidden="true">✦</span> Procesar pendientes
+            }
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <label class="search">
+            <span aria-hidden="true">⌕</span><span class="sr-only">Buscar facturas</span>
+            <input
+              type="search"
+              placeholder="Buscar por factura, socio, correo o plan..."
+              [value]="filtro()"
+              (input)="actualizarFiltro($event)"
+            />
+          </label>
+          <button
+            class="icon-button"
+            type="button"
+            title="Actualizar facturas"
+            aria-label="Actualizar facturas"
+            [disabled]="cargando()"
+            (click)="cargarFacturas()"
+          >
+            ↻
+          </button>
+        </div>
+
+        @if (cargando()) {
+          <div class="state-view" aria-live="polite">
+            <span class="spinner spinner--large" aria-hidden="true"></span>
+            <strong>Cargando facturas</strong>
+            <p>Estamos consultando la información más reciente.</p>
+          </div>
+        } @else if (facturasFiltradas().length === 0) {
+          <div class="state-view">
+            <span class="state-view__icon" aria-hidden="true">▤</span>
+            <strong>{{ filtro() ? 'No encontramos coincidencias' : 'Aún no hay facturas' }}</strong>
+            <p>
+              {{
+                filtro()
+                  ? 'Prueba con otro término de búsqueda.'
+                  : 'Crea la primera factura para comenzar.'
+              }}
+            </p>
+            @if (!filtro()) {
+              <button class="button button--primary" type="button" (click)="abrirCreacion()">
+                Crear primera factura
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Factura</th>
+                  <th>Socio</th>
+                  <th>Plan</th>
+                  <th>Valor</th>
+                  <th>Vencimiento</th>
+                  <th>Estado</th>
+                  <th>Último envío</th>
+                  <th class="table-actions">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (factura of facturasFiltradas(); track factura.id) {
+                  <tr>
+                    <td data-label="Factura">
+                      <button
+                        class="invoice-link"
+                        type="button"
+                        [attr.aria-label]="'Ver factura ' + factura.numeroFactura"
+                        (click)="abrirVistaPrevia(factura)"
+                      >
+                        {{ factura.numeroFactura }}
+                      </button>
+                    </td>
+                    <td data-label="Socio">
+                      <div class="person-cell">
+                        <span class="avatar" aria-hidden="true">{{
+                          factura.nombreSocio.charAt(0)
+                        }}</span>
+                        <div>
+                          <strong>{{ factura.nombreSocio }}</strong
+                          ><small>{{ factura.correoSocio }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td data-label="Plan">{{ factura.planSuscripcion }}</td>
+                    <td data-label="Valor">
+                      <strong>{{ formatearMoneda(factura.valor) }}</strong>
+                    </td>
+                    <td data-label="Vencimiento">
+                      <span [class.text-danger]="estaVencida(factura)">
+                        {{ formatearFecha(factura.fechaVencimiento) }}
+                      </span>
+                    </td>
+                    <td data-label="Estado">
+                      <span [class]="estadoClase(factura.estado)">
+                        <span aria-hidden="true"></span>{{ estadoEtiqueta(factura.estado) }}
+                      </span>
+                    </td>
+                    <td data-label="Último envío">
+                      {{ formatearFecha(factura.ultimoCorreoEnviado) }}
+                    </td>
+                    <td class="table-actions" data-label="Acciones">
+                      <div class="actions">
+                        <button
+                          class="action-button action-button--document"
+                          type="button"
+                          title="Ver y descargar factura"
+                          [attr.aria-label]="'Ver PDF de ' + factura.numeroFactura"
+                          [disabled]="accionId() === factura.id"
+                          (click)="abrirVistaPrevia(factura)"
+                        >
+                          ▤
+                        </button>
+                        <button
+                          class="action-button action-button--send"
+                          type="button"
+                          title="Enviar recordatorio"
+                          [attr.aria-label]="'Enviar recordatorio de ' + factura.numeroFactura"
+                          [disabled]="factura.estado === 'Desactivado' || accionId() === factura.id"
+                          (click)="enviarRecordatorio(factura)"
+                        >
+                          @if (accionId() === factura.id) {
+                            <span class="spinner"></span>
+                          } @else {
+                            ↗
+                          }
+                        </button>
+                        <button
+                          class="action-button"
+                          type="button"
+                          title="Editar factura"
+                          [attr.aria-label]="'Editar ' + factura.numeroFactura"
+                          [disabled]="accionId() === factura.id"
+                          (click)="abrirEdicion(factura)"
+                        >
+                          ✎
+                        </button>
+                        <button
+                          class="action-button action-button--danger"
+                          type="button"
+                          title="Eliminar factura"
+                          [attr.aria-label]="'Eliminar ' + factura.numeroFactura"
+                          [disabled]="accionId() === factura.id"
+                          (click)="eliminarFactura(factura)"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <footer class="panel__footer">
+            Mostrando {{ facturasFiltradas().length }} de {{ totalFacturas() }} facturas
+          </footer>
+        }
+      </section>
+    } @else {
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Entorno de desarrollo</p>
+          <h1>Configuración SMTP</h1>
+          <p class="subtitle">
+            Configura el servidor de correo y valida la entrega antes de enviar recordatorios.
+          </p>
+        </div>
+        <span class="configuration-status" [class.configuration-status--ready]="smtpConfigurada()">
+          <span aria-hidden="true"></span>
+          {{ smtpConfigurada() ? 'Configuración activa' : 'Configuración pendiente' }}
+        </span>
+      </header>
+
+      @if (cargandoSmtp()) {
+        <section class="panel state-view" aria-live="polite">
+          <span class="spinner spinner--large" aria-hidden="true"></span>
+          <strong>Cargando configuración</strong>
+          <p>Consultando los valores no sensibles disponibles en la API.</p>
+        </section>
+      } @else {
+        <form class="configuration-grid" [formGroup]="formularioSmtp">
+          <section class="settings-card">
+            <header class="settings-card__header">
+              <span class="settings-card__icon" aria-hidden="true">✉</span>
+              <div>
+                <h2>Servidor de correo</h2>
+                <p>Los cambios se guardan cifrados y permanecen después de reiniciar la API.</p>
+              </div>
+            </header>
+
+            <div class="form-grid">
+              <label class="field">
+                <span>Servidor SMTP</span>
+                <input
+                  type="text"
+                  formControlName="host"
+                  placeholder="smtp.gmail.com"
+                  autocomplete="off"
+                />
+                @if (formularioSmtp.controls.host.touched && formularioSmtp.controls.host.invalid) {
+                  <small class="field__error">Ingresa el servidor SMTP.</small>
+                }
+              </label>
+              <label class="field">
+                <span>Puerto</span>
+                <input type="number" formControlName="puerto" min="1" max="65535" />
+                @if (
+                  formularioSmtp.controls.puerto.touched && formularioSmtp.controls.puerto.invalid
+                ) {
+                  <small class="field__error">Usa un puerto entre 1 y 65535.</small>
+                }
+              </label>
+              <label class="field field--full">
+                <span>Correo de autenticación</span>
+                <input
+                  type="email"
+                  formControlName="usuario"
+                  placeholder="tu_correo@gmail.com"
+                  autocomplete="username"
+                />
+                @if (
+                  formularioSmtp.controls.usuario.touched && formularioSmtp.controls.usuario.invalid
+                ) {
+                  <small class="field__error">Ingresa un correo válido.</small>
+                }
+              </label>
+              <label class="field field--full">
+                <span>Correo remitente</span>
+                <input
+                  type="email"
+                  formControlName="remitente"
+                  placeholder="tu_correo@gmail.com"
+                  autocomplete="email"
+                />
+                @if (
+                  formularioSmtp.controls.remitente.touched &&
+                  formularioSmtp.controls.remitente.invalid
+                ) {
+                  <small class="field__error">Ingresa un remitente válido.</small>
+                }
+              </label>
+              <label class="field field--full">
+                <span>Contraseña de aplicación</span>
+                <input
+                  type="password"
+                  formControlName="contrasena"
+                  [placeholder]="
+                    contrasenaConfigurada()
+                      ? 'Dejar vacío para conservar la actual'
+                      : 'Contraseña de aplicación'
+                  "
+                  autocomplete="new-password"
+                />
+                @if (
+                  formularioSmtp.controls.contrasena.touched &&
+                  formularioSmtp.controls.contrasena.invalid
+                ) {
+                  <small class="field__error"
+                    >La contraseña es necesaria para el primer guardado.</small
+                  >
+                } @else if (contrasenaConfigurada()) {
+                  <small class="field__hint"
+                    >Ya existe una contraseña cifrada y nunca se devuelve al navegador.</small
+                  >
+                }
+              </label>
+            </div>
+
+            <label class="switch-row">
+              <span>
+                <strong>Habilitar SSL/TLS</strong>
+                <small>Requerido normalmente para el puerto 587.</small>
+              </span>
+              <input type="checkbox" formControlName="habilitarSsl" />
+            </label>
+
+            <footer class="settings-card__footer">
+              <button
+                class="button button--primary"
+                type="button"
+                [disabled]="guardandoSmtp()"
+                (click)="guardarConfiguracionSmtp()"
+              >
+                @if (guardandoSmtp()) {
+                  <span class="spinner" aria-hidden="true"></span> Guardando...
+                } @else {
+                  Guardar configuración
+                }
+              </button>
+            </footer>
+          </section>
+
+          <aside class="settings-side">
+            <section class="test-card">
+              <span class="test-card__badge" aria-hidden="true">✓</span>
+              <h2>Probar entrega</h2>
+              <p>Envía un mensaje real sin crear ni modificar una factura.</p>
+              <label class="field">
+                <span>Destinatario de prueba</span>
+                <input
+                  type="email"
+                  formControlName="destinatario"
+                  placeholder="destino@correo.com"
+                />
+                @if (
+                  formularioSmtp.controls.destinatario.touched &&
+                  formularioSmtp.controls.destinatario.invalid
+                ) {
+                  <small class="field__error">Ingresa un destinatario válido.</small>
+                }
+              </label>
+              <button
+                class="button button--secondary button--full"
+                type="button"
+                [disabled]="!smtpConfigurada() || probandoSmtp()"
+                (click)="probarConfiguracionSmtp()"
+              >
+                @if (probandoSmtp()) {
+                  <span class="spinner spinner--dark" aria-hidden="true"></span> Enviando...
+                } @else {
+                  Enviar correo de prueba
+                }
+              </button>
+            </section>
+
+            <section class="security-note">
+              <span aria-hidden="true">◇</span>
+              <div>
+                <strong>Tu secreto se guarda cifrado</strong>
+                <p>
+                  La API protege la contraseña antes de guardarla localmente. No se almacena en
+                  MongoDB, Git ni el navegador.
+                </p>
+              </div>
+            </section>
+          </aside>
+
+          <section class="message-settings">
+            <header class="settings-card__header">
+              <span class="settings-card__icon" aria-hidden="true">✎</span>
+              <div>
+                <h2>Mensajes de recordatorio</h2>
+                <p>Personaliza el asunto y el contenido enviado en cada etapa de la factura.</p>
+              </div>
+            </header>
+
+            <div class="template-variables" aria-label="Variables disponibles">
+              <span>Variables disponibles:</span>
+              <code>{{ '{NombreSocio}' }}</code>
+              <code>{{ '{CorreoSocio}' }}</code>
+              <code>{{ '{PlanSuscripcion}' }}</code>
+              <code>{{ '{NumeroFactura}' }}</code>
+              <code>{{ '{Valor}' }}</code>
+              <code>{{ '{FechaVencimiento}' }}</code>
+            </div>
+
+            <div class="message-grid">
+              <article class="message-editor">
+                <div class="message-editor__title">
+                  <span class="message-editor__step">1</span>
+                  <div>
+                    <h3>Primer recordatorio</h3>
+                    <p>Aviso inicial para informar al socio sobre el pago pendiente.</p>
+                  </div>
+                </div>
+
+                <label class="field">
+                  <span>Asunto</span>
+                  <input type="text" formControlName="asuntoPrimerRecordatorio" maxlength="200" />
+                  @if (
+                    formularioSmtp.controls.asuntoPrimerRecordatorio.touched &&
+                    formularioSmtp.controls.asuntoPrimerRecordatorio.invalid
+                  ) {
+                    <small class="field__error">Ingresa un asunto de máximo 200 caracteres.</small>
+                  }
+                </label>
+
+                <label class="field">
+                  <span>Mensaje</span>
+                  <textarea
+                    formControlName="mensajePrimerRecordatorio"
+                    maxlength="4000"
+                    rows="8"
+                  ></textarea>
+                  @if (
+                    formularioSmtp.controls.mensajePrimerRecordatorio.touched &&
+                    formularioSmtp.controls.mensajePrimerRecordatorio.invalid
+                  ) {
+                    <small class="field__error"
+                      >Ingresa un mensaje de máximo 4000 caracteres.</small
+                    >
+                  }
+                </label>
+              </article>
+
+              <article class="message-editor message-editor--final">
+                <div class="message-editor__title">
+                  <span class="message-editor__step">2</span>
+                  <div>
+                    <h3>Segundo recordatorio</h3>
+                    <p>Último aviso antes de que la factura pase al estado desactivado.</p>
+                  </div>
+                </div>
+
+                <label class="field">
+                  <span>Asunto</span>
+                  <input type="text" formControlName="asuntoSegundoRecordatorio" maxlength="200" />
+                  @if (
+                    formularioSmtp.controls.asuntoSegundoRecordatorio.touched &&
+                    formularioSmtp.controls.asuntoSegundoRecordatorio.invalid
+                  ) {
+                    <small class="field__error">Ingresa un asunto de máximo 200 caracteres.</small>
+                  }
+                </label>
+
+                <label class="field">
+                  <span>Mensaje</span>
+                  <textarea
+                    formControlName="mensajeSegundoRecordatorio"
+                    maxlength="4000"
+                    rows="8"
+                  ></textarea>
+                  @if (
+                    formularioSmtp.controls.mensajeSegundoRecordatorio.touched &&
+                    formularioSmtp.controls.mensajeSegundoRecordatorio.invalid
+                  ) {
+                    <small class="field__error"
+                      >Ingresa un mensaje de máximo 4000 caracteres.</small
+                    >
+                  }
+                </label>
+              </article>
+            </div>
+
+            <footer class="settings-card__footer">
+              <button
+                class="button button--primary"
+                type="button"
+                [disabled]="guardandoSmtp()"
+                (click)="guardarConfiguracionSmtp()"
+              >
+                @if (guardandoSmtp()) {
+                  <span class="spinner" aria-hidden="true"></span> Guardando...
+                } @else {
+                  Guardar mensajes
+                }
+              </button>
+            </footer>
+          </section>
+        </form>
+      }
+    }
+  </main>
+</div>
+
+@if (facturaVistaPrevia(); as factura) {
+  <div class="modal-backdrop" role="presentation" (keydown.escape)="cerrarVistaPrevia()">
+    <section
+      class="invoice-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-vista-factura"
+    >
+      <header class="invoice-modal__toolbar">
+        <div>
+          <p class="eyebrow">Vista previa</p>
+          <h2 id="titulo-vista-factura">Factura {{ factura.numeroFactura }}</h2>
+        </div>
+        <button
+          class="modal__close"
+          type="button"
+          aria-label="Cerrar vista previa"
+          (click)="cerrarVistaPrevia()"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="invoice-preview">
+        <header class="invoice-preview__header">
+          <div class="invoice-preview__brand">
+            <span aria-hidden="true">S</span>
+            <div>
+              <strong>Sistema Suscripciones</strong>
+              <small>Gestión de membresías y recordatorios</small>
+            </div>
+          </div>
+          <div class="invoice-preview__number">
+            <span>FACTURA</span>
+            <strong># {{ factura.numeroFactura }}</strong>
+          </div>
+        </header>
+
+        <div class="invoice-preview__meta">
+          <div>
+            <span>Vencimiento</span>
+            <strong>{{ formatearFecha(factura.fechaVencimiento) }}</strong>
+          </div>
+          <div>
+            <span>Estado</span>
+            <strong>{{ estadoEtiqueta(factura.estado) }}</strong>
+          </div>
+          <div>
+            <span>Último envío</span>
+            <strong>{{ formatearFecha(factura.ultimoCorreoEnviado) }}</strong>
+          </div>
+        </div>
+
+        <section class="invoice-preview__client">
+          <span>FACTURAR A</span>
+          <strong>{{ factura.nombreSocio }}</strong>
+          <small>{{ factura.correoSocio }}</small>
+        </section>
+
+        <div class="invoice-preview__table">
+          <div class="invoice-preview__row invoice-preview__row--head">
+            <span>Descripción</span>
+            <span>Cantidad</span>
+            <span>Valor</span>
+          </div>
+          <div class="invoice-preview__row">
+            <div>
+              <strong>Plan {{ factura.planSuscripcion }}</strong>
+              <small>Suscripción asociada a la factura {{ factura.numeroFactura }}</small>
+            </div>
+            <span>1</span>
+            <strong>{{ formatearMoneda(factura.valor) }}</strong>
+          </div>
+        </div>
+
+        <div class="invoice-preview__totals">
+          <div>
+            <span>Subtotal</span><strong>{{ formatearMoneda(factura.valor) }}</strong>
+          </div>
+          <div class="invoice-preview__total">
+            <span>Total</span><strong>{{ formatearMoneda(factura.valor) }}</strong>
+          </div>
+        </div>
+
+        <footer class="invoice-preview__note">
+          Resumen administrativo generado por Sistema Suscripciones.
+        </footer>
+      </div>
+
+      <footer class="invoice-modal__actions">
+        <button class="button button--ghost" type="button" (click)="cerrarVistaPrevia()">
+          Cerrar
+        </button>
+        <button
+          class="button button--primary"
+          type="button"
+          [disabled]="generandoPdf()"
+          (click)="descargarPdf(factura)"
+        >
+          @if (generandoPdf()) {
+            <span class="spinner" aria-hidden="true"></span> Generando...
+          } @else {
+            <span aria-hidden="true">↓</span> Descargar PDF
+          }
+        </button>
+      </footer>
+    </section>
+  </div>
+}
+
+@if (modalAbierto()) {
+  <div class="modal-backdrop" role="presentation" (keydown.escape)="cerrarModal()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
+      <header class="modal__header">
+        <div>
+          <p class="eyebrow">{{ facturaEditando() ? 'Actualizar registro' : 'Nuevo registro' }}</p>
+          <h2 id="titulo-modal">{{ facturaEditando() ? 'Editar factura' : 'Crear factura' }}</h2>
+        </div>
+        <button
+          class="modal__close"
+          type="button"
+          aria-label="Cerrar formulario"
+          (click)="cerrarModal()"
+        >
+          ×
+        </button>
+      </header>
+
+      <form [formGroup]="formulario" (ngSubmit)="guardarFactura()">
+        <div class="form-grid">
+          <label class="field">
+            <span>Número de factura</span>
+            <input
+              type="text"
+              formControlName="numeroFactura"
+              placeholder="Ej. SUS-101"
+              autocomplete="off"
+            />
+            @if (
+              formulario.controls.numeroFactura.touched && formulario.controls.numeroFactura.invalid
+            ) {
+              <small class="field__error">Ingresa el número de la factura.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Nombre del socio</span>
+            <input
+              type="text"
+              formControlName="nombreSocio"
+              placeholder="Ej. Laura Gómez"
+              autocomplete="name"
+            />
+            @if (
+              formulario.controls.nombreSocio.touched && formulario.controls.nombreSocio.invalid
+            ) {
+              <small class="field__error">Ingresa el nombre del socio.</small>
+            }
+          </label>
+          <label class="field field--full">
+            <span>Correo electrónico</span>
+            <input
+              type="email"
+              formControlName="correoSocio"
+              placeholder="socio@correo.com"
+              autocomplete="email"
+            />
+            @if (
+              formulario.controls.correoSocio.touched && formulario.controls.correoSocio.invalid
+            ) {
+              <small class="field__error">Ingresa un correo electrónico válido.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Plan de suscripción</span>
+            <input type="text" formControlName="planSuscripcion" placeholder="Ej. Plan Premium" />
+            @if (
+              formulario.controls.planSuscripcion.touched &&
+              formulario.controls.planSuscripcion.invalid
+            ) {
+              <small class="field__error">Ingresa el plan contratado.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Valor (COP)</span>
+            <input
+              type="number"
+              formControlName="valor"
+              min="0.01"
+              max="999999999999.99"
+              step="0.01"
+            />
+            @if (formulario.controls.valor.touched && formulario.controls.valor.invalid) {
+              <small class="field__error">El valor debe ser mayor que cero.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Fecha de vencimiento</span>
+            <input type="date" formControlName="fechaVencimiento" />
+            @if (
+              formulario.controls.fechaVencimiento.touched &&
+              formulario.controls.fechaVencimiento.invalid
+            ) {
+              <small class="field__error">Selecciona una fecha.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Estado del recordatorio</span>
+            <select formControlName="estado">
+              <option value="PrimerRecordatorio">Primer recordatorio</option>
+              <option value="SegundoRecordatorio">Segundo recordatorio</option>
+              <option value="Desactivado">Desactivado</option>
+            </select>
+          </label>
+        </div>
+
+        <footer class="modal__footer">
+          <button
+            class="button button--ghost"
+            type="button"
+            [disabled]="guardando()"
+            (click)="cerrarModal()"
+          >
+            Cancelar
+          </button>
+          <button class="button button--primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) {
+              <span class="spinner" aria-hidden="true"></span> Guardando...
+            } @else {
+              {{ facturaEditando() ? 'Guardar cambios' : 'Crear factura' }}
+            }
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+@if (mensaje(); as aviso) {
+  <div class="toast toast--{{ aviso.tipo }}" role="status" aria-live="polite">
+    <span class="toast__icon" aria-hidden="true">{{
+      aviso.tipo === 'exito' ? '✓' : aviso.tipo === 'error' ? '!' : 'i'
+    }}</span>
+    <p>{{ aviso.texto }}</p>
+    <button type="button" aria-label="Cerrar mensaje" (click)="limpiarMensaje()">×</button>
+  </div>
+}

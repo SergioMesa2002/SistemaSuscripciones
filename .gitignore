@@ -1,6 +1,8 @@
 # Configuración local con secretos
 src/SistemaSuscripciones.Api/.env
 src/SistemaSuscripciones.Api/appsettings.Development.json
+src/SistemaSuscripciones.Api/.smtp-settings.enc
+src/SistemaSuscripciones.Api/.smtp-settings.enc.tmp
 
 # Artefactos de compilación de .NET
 bin/

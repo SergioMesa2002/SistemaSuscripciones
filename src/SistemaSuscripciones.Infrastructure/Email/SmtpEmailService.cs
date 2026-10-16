@@ -1,6 +1,6 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Mail;
-using Microsoft.Extensions.Options;
 using SistemaSuscripciones.Application.Interfaces;
 using SistemaSuscripciones.Domain.Entities;
 using SistemaSuscripciones.Domain.Enums;
@@ -12,16 +12,16 @@ namespace SistemaSuscripciones.Infrastructure.Email;
 /// </summary>
 public class SmtpEmailService : IEmailService
 {
-    private readonly SmtpSettings _settings;
+    private readonly SmtpSettingsStore _settingsStore;
 
     /// <summary>
     /// Inicializa el servicio con opciones externas para evitar incorporar credenciales en el código.
     /// </summary>
-    /// <param name="options">Opciones de conexión y autenticación del servidor SMTP.</param>
-    public SmtpEmailService(IOptions<SmtpSettings> options)
+    /// <param name="settingsStore">Almacén seguro que proporciona las opciones activas y conserva cifrados los secretos.</param>
+    public SmtpEmailService(SmtpSettingsStore settingsStore)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        _settings = options.Value;
+        ArgumentNullException.ThrowIfNull(settingsStore);
+        _settingsStore = settingsStore;
     }
 
     /// <summary>
@@ -39,50 +39,60 @@ public class SmtpEmailService : IEmailService
             throw new InvalidOperationException("No se puede enviar un recordatorio para una factura desactivada.");
         }
 
-        var (asunto, cuerpo) = CrearContenido(factura);
+        var settings = _settingsStore.Obtener();
+        var (asunto, cuerpo) = CrearContenido(factura, settings);
 
         using var mensaje = new MailMessage(
-            _settings.Remitente,
+            settings.Remitente,
             factura.Socio.Correo,
             asunto,
             cuerpo);
 
-        using var cliente = new SmtpClient(_settings.Host, _settings.Puerto)
+        using var cliente = new SmtpClient(settings.Host, settings.Puerto)
         {
-            EnableSsl = _settings.HabilitarSsl,
+            EnableSsl = settings.HabilitarSsl,
             UseDefaultCredentials = false
         };
 
-        if (!string.IsNullOrWhiteSpace(_settings.Usuario))
+        if (!string.IsNullOrWhiteSpace(settings.Usuario))
         {
-            cliente.Credentials = new NetworkCredential(_settings.Usuario, _settings.Contrasena);
+            cliente.Credentials = new NetworkCredential(settings.Usuario, settings.Contrasena);
         }
 
         await cliente.SendMailAsync(mensaje);
     }
 
-    private static (string Asunto, string Cuerpo) CrearContenido(Factura factura)
+    private static (string Asunto, string Cuerpo) CrearContenido(
+        Factura factura,
+        SmtpSettings settings)
     {
-        return factura.Estado switch
+        var plantilla = factura.Estado switch
         {
             EstadoRecordatorio.PrimerRecordatorio =>
-                (
-                    $"Recordatorio de pago - Factura {factura.NumeroFactura}",
-                    $"Hola {factura.Socio.Nombre},\n\n" +
-                    $"Este es un primer recordatorio del pago pendiente por {factura.Valor:N2}, " +
-                    $"correspondiente a la factura {factura.NumeroFactura}, con vencimiento " +
-                    $"el {factura.FechaVencimiento:dd/MM/yyyy}.\n\n" +
-                    "Por favor, realiza el pago a la mayor brevedad posible."
-                ),
+                (settings.AsuntoPrimerRecordatorio, settings.MensajePrimerRecordatorio),
             EstadoRecordatorio.SegundoRecordatorio =>
-                (
-                    $"Último recordatorio de pago - Factura {factura.NumeroFactura}",
-                    $"Hola {factura.Socio.Nombre},\n\n" +
-                    $"Este es el último aviso del pago pendiente por {factura.Valor:N2}, " +
-                    $"correspondiente a la factura {factura.NumeroFactura}.\n\n" +
-                    "Si el pago no se regulariza, los recordatorios de esta factura serán desactivados."
-                ),
+                (settings.AsuntoSegundoRecordatorio, settings.MensajeSegundoRecordatorio),
             _ => throw new InvalidOperationException("El estado de la factura no permite crear un recordatorio.")
         };
+
+        return (
+            AplicarVariables(plantilla.Item1, factura),
+            AplicarVariables(plantilla.Item2, factura));
+    }
+
+    private static string AplicarVariables(string plantilla, Factura factura)
+    {
+        var cultura = CultureInfo.GetCultureInfo("es-CO");
+
+        return plantilla
+            .Replace("{NombreSocio}", factura.Socio.Nombre, StringComparison.Ordinal)
+            .Replace("{CorreoSocio}", factura.Socio.Correo, StringComparison.Ordinal)
+            .Replace("{PlanSuscripcion}", factura.Socio.PlanSuscripcion, StringComparison.Ordinal)
+            .Replace("{NumeroFactura}", factura.NumeroFactura, StringComparison.Ordinal)
+            .Replace("{Valor}", factura.Valor.ToString("N2", cultura), StringComparison.Ordinal)
+            .Replace(
+                "{FechaVencimiento}",
+                factura.FechaVencimiento.ToString("dd/MM/yyyy", cultura),
+                StringComparison.Ordinal);
     }
 }

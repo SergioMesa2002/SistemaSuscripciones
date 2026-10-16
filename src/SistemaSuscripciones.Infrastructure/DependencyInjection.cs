@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaSuscripciones.Application.Interfaces;
@@ -23,10 +24,10 @@ public static class DependencyInjection
     {
         services.Configure<MongoDbSettings>(
             configuration.GetSection(MongoDbSettings.Seccion));
-        services.Configure<SmtpSettings>(
-            configuration.GetSection(SmtpSettings.Seccion));
-
+        services.AddDataProtection()
+            .SetApplicationName("SistemaSuscripciones");
         services.AddSingleton<IFacturaRepository, FacturaMongoRepository>();
+        services.AddSingleton<SmtpSettingsStore>();
         services.AddTransient<IEmailService, SmtpEmailService>();
 
         return services;

@@ -39,4 +39,34 @@ public class SmtpSettings
     /// Obtiene o establece si la conexión debe protegerse mediante SSL/TLS.
     /// </summary>
     public bool HabilitarSsl { get; set; } = true;
+
+    /// <summary>
+    /// Obtiene o establece el asunto utilizado cuando se envía el primer aviso de pago.
+    /// </summary>
+    public string AsuntoPrimerRecordatorio { get; set; } =
+        "Recordatorio de pago - Factura {NumeroFactura}";
+
+    /// <summary>
+    /// Obtiene o establece la plantilla del mensaje enviado durante el primer aviso.
+    /// </summary>
+    public string MensajePrimerRecordatorio { get; set; } =
+        "Hola {NombreSocio},\n\n" +
+        "Este es un primer recordatorio del pago pendiente por {Valor}, " +
+        "correspondiente a la factura {NumeroFactura}, con vencimiento el {FechaVencimiento}.\n\n" +
+        "Por favor, realiza el pago a la mayor brevedad posible.";
+
+    /// <summary>
+    /// Obtiene o establece el asunto utilizado cuando se envía el último aviso de pago.
+    /// </summary>
+    public string AsuntoSegundoRecordatorio { get; set; } =
+        "Último recordatorio de pago - Factura {NumeroFactura}";
+
+    /// <summary>
+    /// Obtiene o establece la plantilla del mensaje enviado antes de desactivar los avisos.
+    /// </summary>
+    public string MensajeSegundoRecordatorio { get; set; } =
+        "Hola {NombreSocio},\n\n" +
+        "Este es el último aviso del pago pendiente por {Valor}, " +
+        "correspondiente a la factura {NumeroFactura}.\n\n" +
+        "Si el pago no se regulariza, los recordatorios de esta factura serán desactivados.";
 }
