@@ -1,5 +1,7 @@
 # Sistema de Suscripciones
 
+La explicación completa de la arquitectura, dependencias, configuración, métodos de ejecución y pruebas está disponible en [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md).
+
 ## Configuración local de MongoDB Atlas
 
 La API carga variables desde `.env` únicamente cuando se ejecuta en el entorno `Development`. Las variables de entorno se agregan después de `appsettings.json`, por lo que sus valores tienen prioridad. Si el sistema operativo ya define una variable, ese valor tampoco será reemplazado por `.env`.
