@@ -1,6 +1,6 @@
 # Sistema de Suscripciones
 
-La explicación completa de la arquitectura, dependencias, configuración, métodos de ejecución y pruebas está disponible en [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md).
+La explicación completa de la arquitectura, dependencias, configuración, métodos de ejecución y pruebas está disponible en [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md). También puede consultarse el [diagrama general de arquitectura](docs/DIAGRAMA_ARQUITECTURA.md).
 
 ## Configuración local de MongoDB Atlas
 

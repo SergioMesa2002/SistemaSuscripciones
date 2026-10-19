@@ -1,0 +1,203 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1400" viewBox="0 0 1600 1400" role="img" aria-labelledby="title description">
+  <title id="title">Arquitectura del Sistema de Suscripciones</title>
+  <desc id="description">Diagrama de las capas Angular, API, Application, Domain e Infrastructure, sus servicios externos, pruebas, configuración y modos de ejecución.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#111111"/>
+    </marker>
+    <style>
+      .title { font: bold 30px 'Times New Roman', serif; fill: #000000; }
+      .subtitle { font: 18px 'Times New Roman', serif; fill: #000000; }
+      .layer-title { font: bold 21px 'Times New Roman', serif; fill: #000000; }
+      .box-title { font: bold 17px 'Times New Roman', serif; fill: #000000; }
+      .text { font: 15px 'Times New Roman', serif; fill: #000000; }
+      .small { font: 13px 'Times New Roman', serif; fill: #000000; }
+      .layer { fill: #ffffff; stroke: #000000; stroke-width: 2.5; rx: 10; }
+      .box { fill: #ffffff; stroke: #000000; stroke-width: 1.5; rx: 7; }
+      .external { fill: #ffffff; stroke: #000000; stroke-width: 2; stroke-dasharray: 8 5; rx: 8; }
+      .arrow { fill: none; stroke: #111111; stroke-width: 2; marker-end: url(#arrow); }
+      .dashed { fill: none; stroke: #111111; stroke-width: 2; stroke-dasharray: 7 5; marker-end: url(#arrow); }
+      .label { font: italic 13px 'Times New Roman', serif; fill: #000000; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="1400" fill="#ffffff"/>
+  <text x="800" y="44" text-anchor="middle" class="title">Arquitectura del Sistema de Suscripciones</text>
+  <text x="800" y="72" text-anchor="middle" class="subtitle">Capas, dependencias, servicios externos, pruebas y ejecución</text>
+
+  <!-- Actores y ejecución -->
+  <rect x="55" y="105" width="255" height="105" class="box"/>
+  <text x="182" y="135" text-anchor="middle" class="box-title">Modos de ejecución</text>
+  <text x="75" y="161" class="text">• API: Swagger / Postman</text>
+  <text x="75" y="184" class="text">• Separado: Angular + API</text>
+  <text x="75" y="207" class="text">• Integrado: script único</text>
+
+  <rect x="675" y="108" width="250" height="70" class="box"/>
+  <text x="800" y="137" text-anchor="middle" class="box-title">Usuario o revisor</text>
+  <text x="800" y="160" text-anchor="middle" class="text">Navegador web</text>
+
+  <!-- Angular -->
+  <rect x="350" y="240" width="900" height="175" class="layer"/>
+  <text x="800" y="270" text-anchor="middle" class="layer-title">SistemaSuscripciones.Web — Angular 22</text>
+  <rect x="380" y="292" width="190" height="90" class="box"/>
+  <text x="475" y="321" text-anchor="middle" class="box-title">Interfaz</text>
+  <text x="475" y="345" text-anchor="middle" class="text">app.ts, HTML y SCSS</text>
+  <text x="475" y="367" text-anchor="middle" class="small">Formularios y tabla</text>
+
+  <rect x="592" y="292" width="190" height="90" class="box"/>
+  <text x="687" y="321" text-anchor="middle" class="box-title">Modelos</text>
+  <text x="687" y="346" text-anchor="middle" class="text">models/</text>
+  <text x="687" y="368" text-anchor="middle" class="small">Contratos TypeScript</text>
+
+  <rect x="804" y="292" width="205" height="90" class="box"/>
+  <text x="906" y="321" text-anchor="middle" class="box-title">Servicios HTTP</text>
+  <text x="906" y="345" text-anchor="middle" class="text">Facturas y SMTP</text>
+  <text x="906" y="367" text-anchor="middle" class="small">Solicitudes /api</text>
+
+  <rect x="1031" y="292" width="190" height="90" class="box"/>
+  <text x="1126" y="321" text-anchor="middle" class="box-title">PDF</text>
+  <text x="1126" y="345" text-anchor="middle" class="text">FacturaPdfService</text>
+  <text x="1126" y="367" text-anchor="middle" class="small">jsPDF en navegador</text>
+
+  <!-- API -->
+  <rect x="350" y="465" width="900" height="180" class="layer"/>
+  <text x="800" y="495" text-anchor="middle" class="layer-title">SistemaSuscripciones.Api — ASP.NET Core</text>
+  <rect x="380" y="518" width="200" height="90" class="box"/>
+  <text x="480" y="547" text-anchor="middle" class="box-title">Program.cs</text>
+  <text x="480" y="571" text-anchor="middle" class="text">Inicio y composición</text>
+  <text x="480" y="593" text-anchor="middle" class="small">CORS, errores y estáticos</text>
+
+  <rect x="605" y="518" width="250" height="90" class="box"/>
+  <text x="730" y="547" text-anchor="middle" class="box-title">FacturasController</text>
+  <text x="730" y="571" text-anchor="middle" class="text">CRUD y recordatorios</text>
+  <text x="730" y="593" text-anchor="middle" class="small">Respuestas HTTP seguras</text>
+
+  <rect x="880" y="518" width="250" height="90" class="box"/>
+  <text x="1005" y="547" text-anchor="middle" class="box-title">ConfiguracionController</text>
+  <text x="1005" y="571" text-anchor="middle" class="text">SMTP en Development</text>
+  <text x="1005" y="593" text-anchor="middle" class="small">Guardar y enviar prueba</text>
+
+  <rect x="1152" y="518" width="70" height="90" class="box"/>
+  <text x="1187" y="550" text-anchor="middle" class="box-title">API</text>
+  <text x="1187" y="575" text-anchor="middle" class="small">Swagger</text>
+
+  <!-- Application y Domain -->
+  <rect x="350" y="695" width="570" height="215" class="layer"/>
+  <text x="635" y="725" text-anchor="middle" class="layer-title">SistemaSuscripciones.Application</text>
+  <rect x="382" y="752" width="230" height="112" class="box"/>
+  <text x="497" y="781" text-anchor="middle" class="box-title">RecordatorioService</text>
+  <text x="497" y="806" text-anchor="middle" class="text">Caso de uso principal</text>
+  <text x="497" y="829" text-anchor="middle" class="small">EnviarAsync</text>
+  <text x="497" y="850" text-anchor="middle" class="small">ProcesarPendientesAsync</text>
+
+  <rect x="638" y="752" width="250" height="112" class="box"/>
+  <text x="763" y="781" text-anchor="middle" class="box-title">Contratos y DTO</text>
+  <text x="763" y="806" text-anchor="middle" class="text">IFacturaRepository</text>
+  <text x="763" y="829" text-anchor="middle" class="text">IEmailService</text>
+  <text x="763" y="850" text-anchor="middle" class="small">Guardar, resumen y resultado</text>
+
+  <rect x="965" y="695" width="285" height="215" class="layer"/>
+  <text x="1107" y="725" text-anchor="middle" class="layer-title">Domain — Núcleo</text>
+  <rect x="995" y="752" width="225" height="112" class="box"/>
+  <text x="1107" y="781" text-anchor="middle" class="box-title">Entidades y estado</text>
+  <text x="1107" y="806" text-anchor="middle" class="text">Factura contiene Socio</text>
+  <text x="1107" y="830" text-anchor="middle" class="small">Primer recordatorio</text>
+  <text x="1107" y="850" text-anchor="middle" class="small">Segundo → Desactivado</text>
+
+  <!-- Infrastructure -->
+  <rect x="350" y="960" width="900" height="190" class="layer"/>
+  <text x="800" y="990" text-anchor="middle" class="layer-title">SistemaSuscripciones.Infrastructure — Adaptadores</text>
+  <rect x="380" y="1014" width="230" height="95" class="box"/>
+  <text x="495" y="1043" text-anchor="middle" class="box-title">DependencyInjection</text>
+  <text x="495" y="1068" text-anchor="middle" class="text">Conecta contratos</text>
+  <text x="495" y="1091" text-anchor="middle" class="small">con implementaciones</text>
+
+  <rect x="635" y="1014" width="255" height="95" class="box"/>
+  <text x="762" y="1043" text-anchor="middle" class="box-title">MongoDb/</text>
+  <text x="762" y="1068" text-anchor="middle" class="text">FacturaMongoRepository</text>
+  <text x="762" y="1091" text-anchor="middle" class="small">Implementa IFacturaRepository</text>
+
+  <rect x="915" y="1014" width="305" height="95" class="box"/>
+  <text x="1067" y="1043" text-anchor="middle" class="box-title">Email/</text>
+  <text x="1067" y="1068" text-anchor="middle" class="text">SmtpEmailService y SettingsStore</text>
+  <text x="1067" y="1091" text-anchor="middle" class="small">Correo y almacenamiento cifrado</text>
+
+  <!-- Externos -->
+  <rect x="350" y="1200" width="250" height="95" class="external"/>
+  <text x="475" y="1232" text-anchor="middle" class="box-title">MongoDB Atlas</text>
+  <text x="475" y="1258" text-anchor="middle" class="text">Colección facturas</text>
+  <text x="475" y="1280" text-anchor="middle" class="small">Socio embebido</text>
+
+  <rect x="675" y="1200" width="250" height="95" class="external"/>
+  <text x="800" y="1232" text-anchor="middle" class="box-title">Servidor SMTP</text>
+  <text x="800" y="1258" text-anchor="middle" class="text">Entrega del correo</text>
+  <text x="800" y="1280" text-anchor="middle" class="small">TLS y credenciales</text>
+
+  <rect x="1000" y="1200" width="250" height="95" class="external"/>
+  <text x="1125" y="1232" text-anchor="middle" class="box-title">Archivos privados</text>
+  <text x="1125" y="1258" text-anchor="middle" class="text">.env y .smtp-settings.enc</text>
+  <text x="1125" y="1280" text-anchor="middle" class="small">Excluidos de Git</text>
+
+  <!-- Pruebas -->
+  <rect x="1295" y="465" width="250" height="445" class="layer"/>
+  <text x="1420" y="495" text-anchor="middle" class="layer-title">Pruebas</text>
+  <rect x="1320" y="530" width="200" height="120" class="box"/>
+  <text x="1420" y="560" text-anchor="middle" class="box-title">xUnit</text>
+  <text x="1420" y="585" text-anchor="middle" class="text">6 pruebas</text>
+  <text x="1420" y="608" text-anchor="middle" class="small">Repositorio falso</text>
+  <text x="1420" y="630" text-anchor="middle" class="small">Correo falso</text>
+
+  <rect x="1320" y="685" width="200" height="105" class="box"/>
+  <text x="1420" y="715" text-anchor="middle" class="box-title">Vitest</text>
+  <text x="1420" y="740" text-anchor="middle" class="text">4 pruebas Angular</text>
+  <text x="1420" y="764" text-anchor="middle" class="small">app.spec.ts</text>
+
+  <rect x="1320" y="825" width="200" height="55" class="box"/>
+  <text x="1420" y="858" text-anchor="middle" class="text">Sin MongoDB ni SMTP real</text>
+
+  <!-- Configuración -->
+  <rect x="55" y="465" width="250" height="445" class="layer"/>
+  <text x="180" y="495" text-anchor="middle" class="layer-title">Configuración</text>
+  <rect x="80" y="530" width="200" height="90" class="box"/>
+  <text x="180" y="560" text-anchor="middle" class="box-title">.env</text>
+  <text x="180" y="584" text-anchor="middle" class="text">MongoDB local</text>
+  <text x="180" y="605" text-anchor="middle" class="small">Solo Development</text>
+
+  <rect x="80" y="650" width="200" height="90" class="box"/>
+  <text x="180" y="680" text-anchor="middle" class="box-title">appsettings.json</text>
+  <text x="180" y="704" text-anchor="middle" class="text">Valores no sensibles</text>
+  <text x="180" y="725" text-anchor="middle" class="small">Configuración base</text>
+
+  <rect x="80" y="770" width="200" height="105" class="box"/>
+  <text x="180" y="800" text-anchor="middle" class="box-title">launchSettings.json</text>
+  <text x="180" y="825" text-anchor="middle" class="text">http, https e integrated</text>
+  <text x="180" y="849" text-anchor="middle" class="small">SERVEANGULAR=true</text>
+
+  <!-- Flechas principales -->
+  <path d="M800 178 L800 238" class="arrow"/>
+  <path d="M800 415 L800 463" class="arrow"/>
+  <text x="820" y="445" class="label">HTTP /api</text>
+  <path d="M730 608 L635 693" class="arrow"/>
+  <path d="M1005 608 L795 693" class="arrow"/>
+  <path d="M920 805 L963 805" class="arrow"/>
+  <text x="930" y="790" class="label">usa</text>
+  <path d="M635 910 L635 958" class="arrow"/>
+  <text x="651" y="941" class="label">interfaces</text>
+  <path d="M762 1109 L475 1198" class="arrow"/>
+  <path d="M1067 1109 L800 1198" class="arrow"/>
+  <path d="M1067 1109 L1125 1198" class="arrow"/>
+
+  <!-- Flechas laterales -->
+  <path d="M310 157 L670 142" class="dashed"/>
+  <path d="M305 687 L348 687" class="arrow"/>
+  <text x="310" y="672" class="label">carga</text>
+  <path d="M1252 735 L1293 735" class="dashed"/>
+  <text x="1258" y="720" class="label">valida</text>
+  <path d="M1252 820 L1293 820" class="dashed"/>
+
+  <!-- Leyenda -->
+  <line x1="350" y1="1355" x2="410" y2="1355" class="arrow"/>
+  <text x="425" y="1360" class="text">Flujo de ejecución o dependencia</text>
+  <line x1="735" y1="1355" x2="795" y2="1355" class="dashed"/>
+  <text x="810" y="1360" class="text">Configuración, implementación o validación</text>
+</svg>
