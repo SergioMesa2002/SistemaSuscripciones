@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -37,7 +37,8 @@ export class App implements OnInit {
   protected readonly facturaEditando = signal<FacturaResumen | null>(null);
   protected readonly facturaVistaPrevia = signal<FacturaResumen | null>(null);
   protected readonly mensaje = signal<MensajeUi | null>(null);
-  protected readonly vista = signal<'facturas' | 'configuracion'>('facturas');
+  protected readonly vista = signal<'inicio' | 'facturas' | 'configuracion'>('inicio');
+  protected readonly menuAbierto = signal(false);
   protected readonly cargandoSmtp = signal(false);
   protected readonly guardandoSmtp = signal(false);
   protected readonly probandoSmtp = signal(false);
@@ -131,11 +132,39 @@ export class App implements OnInit {
     this.filtro.set((event.target as HTMLInputElement).value);
   }
 
+  protected alternarMenu(): void {
+    this.menuAbierto.update((abierto) => !abierto);
+  }
+
+  protected cerrarMenu(): void {
+    this.menuAbierto.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected cerrarMenuConEscape(): void {
+    this.cerrarMenu();
+  }
+
+  protected mostrarInicio(
+    seccion?: 'juridica' | 'tecnologica' | 'contable' | 'noticias' | 'contacto',
+  ): void {
+    this.cerrarMenu();
+    this.vista.set('inicio');
+
+    if (seccion) {
+      window.setTimeout(() =>
+        document.getElementById(seccion)?.scrollIntoView({ behavior: 'smooth' }),
+      );
+    }
+  }
+
   protected mostrarFacturas(): void {
+    this.cerrarMenu();
     this.vista.set('facturas');
   }
 
   protected mostrarConfiguracion(): void {
+    this.cerrarMenu();
     this.vista.set('configuracion');
     void this.cargarConfiguracionSmtp();
   }
@@ -245,6 +274,7 @@ export class App implements OnInit {
   }
 
   protected abrirCreacion(): void {
+    this.cerrarMenu();
     this.facturaEditando.set(null);
     this.formulario.reset({
       numeroFactura: '',

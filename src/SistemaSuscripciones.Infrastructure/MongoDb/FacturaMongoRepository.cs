@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SistemaSuscripciones.Application.Interfaces;
 using SistemaSuscripciones.Domain.Entities;
+using SistemaSuscripciones.Domain.Enums;
 
 namespace SistemaSuscripciones.Infrastructure.MongoDb;
 
@@ -28,7 +30,7 @@ public class FacturaMongoRepository : IFacturaRepository
     }
 
     /// <summary>
-    /// Recupera de forma asíncrona todas las facturas para permitir su consulta o procesamiento masivo.
+    /// Recupera de forma asíncrona todas las facturas para atender la consulta general de la API.
     /// </summary>
     /// <returns>Una tarea que contiene la secuencia completa de facturas almacenadas.</returns>
     public async Task<IEnumerable<Factura>> ObtenerTodasAsync()
@@ -36,6 +38,32 @@ public class FacturaMongoRepository : IFacturaRepository
         return await _facturas
             .Find(Builders<Factura>.Filter.Empty)
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Consulta y transmite de forma asíncrona solamente las facturas activas para reducir transferencia y uso de memoria.
+    /// </summary>
+    /// <param name="cancellationToken">Token que permite cancelar la consulta y la lectura del cursor de MongoDB.</param>
+    /// <returns>Un flujo asíncrono alimentado por el cursor de MongoDB con las facturas no desactivadas.</returns>
+    public async IAsyncEnumerable<Factura> ObtenerPendientesAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var filtro = Builders<Factura>.Filter.Ne(
+            factura => factura.Estado,
+            EstadoRecordatorio.Desactivado);
+
+        using var cursor = await _facturas.FindAsync(
+            filtro,
+            cancellationToken: cancellationToken);
+
+        while (await cursor.MoveNextAsync(cancellationToken))
+        {
+            foreach (var factura in cursor.Current)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return factura;
+            }
+        }
     }
 
     /// <summary>

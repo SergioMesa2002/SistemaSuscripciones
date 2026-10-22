@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SistemaSuscripciones.Application.DTOs;
 using SistemaSuscripciones.Application.Interfaces;
-using SistemaSuscripciones.Domain.Entities;
 
 namespace SistemaSuscripciones.Api.Controllers;
 
@@ -12,22 +11,22 @@ namespace SistemaSuscripciones.Api.Controllers;
 [Route("api/[controller]")]
 public class FacturasController : ControllerBase
 {
-    private readonly IFacturaRepository _facturaRepository;
+    private readonly IFacturaService _facturaService;
     private readonly IRecordatorioService _recordatorioService;
     private readonly ILogger<FacturasController> _logger;
 
     /// <summary>
     /// Inicializa el controlador con los casos de uso y consultas requeridos por la API.
     /// </summary>
-    /// <param name="facturaRepository">Repositorio utilizado para consultar las facturas almacenadas.</param>
+    /// <param name="facturaService">Caso de uso utilizado para consultar y mantener facturas.</param>
     /// <param name="recordatorioService">Servicio que coordina el envío y las transiciones de estado.</param>
     /// <param name="logger">Registro técnico utilizado sin trasladar detalles sensibles a las respuestas.</param>
     public FacturasController(
-        IFacturaRepository facturaRepository,
+        IFacturaService facturaService,
         IRecordatorioService recordatorioService,
         ILogger<FacturasController> logger)
     {
-        _facturaRepository = facturaRepository;
+        _facturaService = facturaService;
         _recordatorioService = recordatorioService;
         _logger = logger;
     }
@@ -45,10 +44,7 @@ public class FacturasController : ControllerBase
     {
         try
         {
-            var facturas = await _facturaRepository.ObtenerTodasAsync();
-            var resumenes = facturas.Select(CrearResumen);
-
-            return Ok(resumenes);
+            return Ok(await _facturaService.ObtenerTodasAsync());
         }
         catch (Exception exception)
         {
@@ -73,25 +69,8 @@ public class FacturasController : ControllerBase
     {
         try
         {
-            var factura = new Factura
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                NumeroFactura = solicitud.NumeroFactura,
-                Socio = new Socio
-                {
-                    Id = Guid.NewGuid().ToString("N"),
-                    Nombre = solicitud.NombreSocio,
-                    Correo = solicitud.CorreoSocio,
-                    PlanSuscripcion = solicitud.PlanSuscripcion
-                },
-                Valor = solicitud.Valor,
-                FechaVencimiento = solicitud.FechaVencimiento,
-                Estado = solicitud.Estado
-            };
-
-            await _facturaRepository.CrearAsync(factura);
-
-            return StatusCode(StatusCodes.Status201Created, CrearResumen(factura));
+            var factura = await _facturaService.CrearAsync(solicitud);
+            return StatusCode(StatusCodes.Status201Created, factura);
         }
         catch (Exception exception)
         {
@@ -121,7 +100,7 @@ public class FacturasController : ControllerBase
     {
         try
         {
-            var factura = await _facturaRepository.ObtenerPorIdAsync(id);
+            var factura = await _facturaService.ActualizarAsync(id, solicitud);
 
             if (factura is null)
             {
@@ -133,17 +112,7 @@ public class FacturasController : ControllerBase
                 });
             }
 
-            factura.NumeroFactura = solicitud.NumeroFactura;
-            factura.Socio.Nombre = solicitud.NombreSocio;
-            factura.Socio.Correo = solicitud.CorreoSocio;
-            factura.Socio.PlanSuscripcion = solicitud.PlanSuscripcion;
-            factura.Valor = solicitud.Valor;
-            factura.FechaVencimiento = solicitud.FechaVencimiento;
-            factura.Estado = solicitud.Estado;
-
-            await _facturaRepository.ActualizarAsync(factura);
-
-            return Ok(CrearResumen(factura));
+            return Ok(factura);
         }
         catch (Exception exception)
         {
@@ -168,7 +137,7 @@ public class FacturasController : ControllerBase
     {
         try
         {
-            var eliminada = await _facturaRepository.EliminarAsync(id);
+            var eliminada = await _facturaService.EliminarAsync(id);
 
             if (!eliminada)
             {
@@ -236,22 +205,6 @@ public class FacturasController : ControllerBase
             RegistrarFalloInesperado(exception, "procesar las facturas pendientes");
             return CrearProblemaInterno();
         }
-    }
-
-    private static FacturaResumenDto CrearResumen(Factura factura)
-    {
-        return new FacturaResumenDto
-        {
-            Id = factura.Id,
-            NumeroFactura = factura.NumeroFactura,
-            NombreSocio = factura.Socio.Nombre,
-            CorreoSocio = factura.Socio.Correo,
-            PlanSuscripcion = factura.Socio.PlanSuscripcion,
-            Valor = factura.Valor,
-            FechaVencimiento = factura.FechaVencimiento,
-            Estado = factura.Estado,
-            UltimoCorreoEnviado = factura.UltimoCorreoEnviado
-        };
     }
 
     private ObjectResult CrearProblemaInterno()

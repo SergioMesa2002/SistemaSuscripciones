@@ -54,10 +54,10 @@ public class RecordatorioService : IRecordatorioService
     /// <returns>Una tarea que contiene un resultado por cada factura activa procesada.</returns>
     public async Task<IEnumerable<ResultadoRecordatorioDto>> ProcesarPendientesAsync()
     {
-        var facturas = await _facturaRepository.ObtenerTodasAsync();
         var resultados = new List<ResultadoRecordatorioDto>();
 
-        foreach (var factura in facturas.Where(factura => factura.Estado != EstadoRecordatorio.Desactivado))
+        // El repositorio filtra y transmite los pendientes para no cargar la colección completa en memoria.
+        await foreach (var factura in _facturaRepository.ObtenerPendientesAsync())
         {
             resultados.Add(await ProcesarFacturaAsync(factura));
         }
@@ -80,15 +80,8 @@ public class RecordatorioService : IRecordatorioService
 
         await _emailService.EnviarRecordatorioAsync(factura);
 
-        // El estado avanza solo después del envío para conservarlo intacto si el proveedor de correo falla.
-        factura.Estado = factura.Estado switch
-        {
-            EstadoRecordatorio.PrimerRecordatorio => EstadoRecordatorio.SegundoRecordatorio,
-            EstadoRecordatorio.SegundoRecordatorio => EstadoRecordatorio.Desactivado,
-            _ => throw new InvalidOperationException("El estado de la factura no permite enviar recordatorios.")
-        };
-
-        factura.UltimoCorreoEnviado = DateTime.UtcNow;
+        // El dominio protege la transición y solo se invoca después de confirmar la entrega del correo.
+        factura.RegistrarRecordatorioEnviado(DateTime.UtcNow);
         await _facturaRepository.ActualizarAsync(factura);
 
         return new ResultadoRecordatorioDto

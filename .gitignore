@@ -10,3 +10,7 @@ src/SistemaSuscripciones.Api/wwwroot/
 # Artefactos de compilación de .NET
 bin/
 obj/
+
+# Resultados locales de pruebas y cobertura
+TestResults/
+artifacts/coverage/

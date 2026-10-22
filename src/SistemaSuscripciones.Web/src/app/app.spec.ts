@@ -27,7 +27,7 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('muestra el título principal del panel', async () => {
+  it('muestra la portada principal de Firma Orión', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
@@ -36,7 +36,40 @@ describe('App', () => {
     fixture.detectChanges();
 
     const pagina = fixture.nativeElement as HTMLElement;
-    expect(pagina.querySelector('h1')?.textContent).toContain('Gestión de facturas');
+    expect(pagina.querySelector('h1')?.textContent).toContain('Firma Orión');
+    expect(pagina.querySelector('.lead-story')?.textContent).toContain(
+      'liquidación laboral no pagada',
+    );
+    expect(pagina.querySelectorAll('.news-card')).toHaveLength(3);
+    expect(pagina.querySelector('.site-footer')?.textContent).toContain('Contáctanos');
+    expect(pagina.querySelectorAll('.social-links a')).toHaveLength(4);
+    expect(pagina.querySelector('.top-navigation')?.textContent).toContain('Noticias');
+    expect(pagina.querySelector('.top-navigation')?.textContent).toContain('Contáctanos');
+  });
+
+  it('mantiene oculto el menú lateral hasta tocar el botón de tres líneas', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/Facturas').flush([]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const pagina = fixture.nativeElement as HTMLElement;
+    const botonMenu = pagina.querySelector<HTMLButtonElement>('.menu-toggle');
+    const menu = pagina.querySelector<HTMLElement>('.sidebar');
+
+    expect(menu?.classList.contains('sidebar--open')).toBe(false);
+    expect(botonMenu?.getAttribute('aria-expanded')).toBe('false');
+
+    botonMenu?.click();
+    fixture.detectChanges();
+
+    expect(menu?.classList.contains('sidebar--open')).toBe(true);
+    expect(botonMenu?.getAttribute('aria-expanded')).toBe('true');
+
+    pagina.querySelector<HTMLButtonElement>('.sidebar-backdrop')?.click();
+    fixture.detectChanges();
+    expect(menu?.classList.contains('sidebar--open')).toBe(false);
   });
 
   it('abre la configuración y consulta el estado SMTP sin recibir la contraseña', async () => {
@@ -93,6 +126,11 @@ describe('App', () => {
     fixture.detectChanges();
 
     const pagina = fixture.nativeElement as HTMLElement;
+    const botonFacturas = [...pagina.querySelectorAll<HTMLButtonElement>('.navigation__item')].find(
+      (boton) => boton.textContent?.trim() === '▦ Facturas',
+    );
+    botonFacturas?.click();
+    fixture.detectChanges();
     pagina.querySelector<HTMLButtonElement>('.invoice-link')?.click();
     fixture.detectChanges();
 

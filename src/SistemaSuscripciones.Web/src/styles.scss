@@ -8,8 +8,8 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  color: #18201d;
-  background: #f5f7f4;
+  color: #071b33;
+  background: #f4f9fd;
   font-synthesis: none;
 }
 
@@ -20,7 +20,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  background: #f5f7f4;
+  background: #f4f9fd;
 }
 
 body {
@@ -28,7 +28,7 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(circle at 85% 5%, rgba(208, 234, 181, 0.42), transparent 28rem), #f5f7f4;
+    radial-gradient(circle at 85% 5%, rgba(87, 193, 255, 0.2), transparent 30rem), #f4f9fd;
 }
 
 button,

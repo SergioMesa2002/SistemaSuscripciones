@@ -77,12 +77,64 @@ El proyecto conserva tres formas de iniciarse:
 
 El tercer modo compila Angular en `SistemaSuscripciones.Api/wwwroot` y luego inicia ASP.NET Core. La aplicación completa queda disponible en `https://localhost:7275` y Swagger continúa en `https://localhost:7275/swagger`.
 
+Para iniciar la aplicación integrada y el informe visual de cobertura con un solo comando:
+
+```bash
+./ejecutar-integrado.sh --cobertura
+```
+
+En este modo, la aplicación queda en `https://localhost:7275` y la cobertura en `http://localhost:8080`. Al presionar `Ctrl+C`, se detienen los servidores iniciados por esa ejecución. El puerto del informe puede cambiarse mediante `COBERTURA_PORT`, por ejemplo:
+
+```bash
+COBERTURA_PORT=5500 ./ejecutar-integrado.sh --cobertura
+```
+
+Si el puerto configurado ya contiene un informe de cobertura del proyecto, el arranque integrado reutiliza ese servidor y no lo detiene al salir porque pertenece a una ejecución anterior. Si está ocupado por otra aplicación, la API continúa iniciándose y se muestra el comando para seleccionar un puerto diferente.
+
 Para validar el frontend:
 
 ```bash
 npm run build
 npm test -- --watch=false
 ```
+
+## Informe visual de cobertura
+
+El proyecto utiliza Coverlet para recopilar la cobertura de las pruebas de xUnit y ReportGenerator para construir un informe HTML navegable similar al de JaCoCo. La herramienta queda versionada en `dotnet-tools.json`, por lo que no requiere una instalación global.
+
+Desde la raíz del repositorio, ejecuta:
+
+```bash
+./scripts/generar-cobertura.sh
+```
+
+El comando ejecuta las pruebas y crea el informe en:
+
+```text
+artifacts/coverage/html/index.html
+```
+
+En Linux se puede abrir con:
+
+```bash
+xdg-open artifacts/coverage/html/index.html
+```
+
+También puede visualizarse desde un servidor web local. El puerto predeterminado es `8080`:
+
+```bash
+./scripts/ver-cobertura.sh
+```
+
+Después abre `http://localhost:8080`. Para seleccionar otro puerto, por ejemplo `5500`:
+
+```bash
+./scripts/ver-cobertura.sh 5500
+```
+
+El servidor escucha únicamente en `127.0.0.1` y se detiene con `Ctrl+C`.
+
+El informe muestra cobertura por ensamblado, clase y método, además de señalar en cada archivo las líneas cubiertas y no cubiertas. Los resultados son artefactos locales y no se almacenan en Git.
 
 Las acciones de recordatorio requieren una configuración SMTP válida en la API. El CRUD de facturas puede utilizarse con MongoDB sin configurar SMTP.
 

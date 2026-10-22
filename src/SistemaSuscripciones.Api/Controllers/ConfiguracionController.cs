@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using SistemaSuscripciones.Api.Models;
 using SistemaSuscripciones.Application.Interfaces;
 using SistemaSuscripciones.Domain.Entities;
-using SistemaSuscripciones.Domain.Enums;
 using SistemaSuscripciones.Infrastructure.Email;
 
 namespace SistemaSuscripciones.Api.Controllers;
@@ -142,21 +141,17 @@ public sealed class ConfiguracionController : ControllerBase
             });
         }
 
-        var facturaPrueba = new Factura
-        {
-            Id = Guid.NewGuid().ToString("N"),
-            NumeroFactura = "SMTP-PRUEBA",
-            Socio = new Socio
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                Nombre = "Prueba SMTP",
-                Correo = solicitud.Destinatario,
-                PlanSuscripcion = "Configuración local"
-            },
-            Valor = 0,
-            FechaVencimiento = DateTime.UtcNow,
-            Estado = EstadoRecordatorio.PrimerRecordatorio
-        };
+        var socioPrueba = Socio.Crear(
+            Guid.NewGuid().ToString("N"),
+            "Prueba SMTP",
+            solicitud.Destinatario,
+            "Configuración local");
+        var facturaPrueba = Factura.Crear(
+            Guid.NewGuid().ToString("N"),
+            "SMTP-PRUEBA",
+            socioPrueba,
+            1m,
+            DateTime.UtcNow);
 
         try
         {

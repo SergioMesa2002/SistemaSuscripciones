@@ -8,10 +8,19 @@ namespace SistemaSuscripciones.Application.Interfaces;
 public interface IFacturaRepository
 {
     /// <summary>
-    /// Obtiene de forma asíncrona todas las facturas disponibles para su consulta o procesamiento.
+    /// Obtiene de forma asíncrona todas las facturas disponibles para la consulta general de la API.
     /// </summary>
     /// <returns>Una tarea que contiene la secuencia de facturas almacenadas.</returns>
     Task<IEnumerable<Factura>> ObtenerTodasAsync();
+
+    /// <summary>
+    /// Recorre de forma asíncrona únicamente las facturas cuyo ciclo de recordatorios permanece activo.
+    /// El filtrado corresponde al proveedor de persistencia para evitar transferir y retener registros desactivados.
+    /// </summary>
+    /// <param name="cancellationToken">Token que permite cancelar la consulta y detener la lectura de resultados.</param>
+    /// <returns>Un flujo asíncrono de facturas pendientes obtenido directamente desde el almacenamiento.</returns>
+    IAsyncEnumerable<Factura> ObtenerPendientesAsync(
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Busca de forma asíncrona una factura mediante su identificador.

@@ -46,6 +46,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IFacturaService, FacturaService>();
 builder.Services.AddScoped<IRecordatorioService, RecordatorioService>();
 
 builder.Services.AddCors(options =>
